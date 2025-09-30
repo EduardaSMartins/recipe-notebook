@@ -1,0 +1,211 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model user {
+  id               Int                @id @default(autoincrement())
+  name             String             @db.VarChar(100)
+  email            String             @unique @db.VarChar(100)
+  password         String             @db.VarChar(150)
+  birthDate        DateTime?          @db.Date
+  avatar           String?            @db.LongText
+  created_at       DateTime           @default(now())
+  updated_at       DateTime           @default(now())
+  deleted_at       DateTime?
+  login            login[]
+  recover_password recover_password[]
+  favourite        favourite[]
+  user_role        user_role[]
+}
+
+model role {
+  id              Int               @id @default(autoincrement())
+  name            String            @db.VarChar(45)
+  slug            String            @db.VarChar(45)
+  description     String?           @db.VarChar(255)
+  is_system       Boolean           @default(true) @db.TinyInt
+  active          Boolean           @default(true) @db.TinyInt
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @default(now())
+  deleted_at      DateTime?
+  role_permission role_permission[]
+  user_role       user_role[]
+}
+
+model permission {
+  id              Int               @id @default(autoincrement())
+  name            String            @db.VarChar(45)
+  key             String            @db.VarChar(45)
+  description     String?           @db.VarChar(255)
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @default(now())
+  deleted_at      DateTime?
+  role_permission role_permission[]
+  user_role       user_role[]
+}
+
+model recover_password {
+  id                    Int       @id @default(autoincrement())
+  id_user               Int
+  token                 String    @db.Text
+  token_expiration_date DateTime  @db.DateTime(0)
+  is_used               Boolean   @default(false) @db.TinyInt
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now())
+  deleted_at            DateTime?
+  user                  user      @relation(fields: [id_user], references: [id])
+}
+
+model login {
+  id                            Int       @id @default(autoincrement())
+  id_user                       Int
+  access_token                  String    @db.Text
+  refresh_token                 String    @db.Text
+  access_token_expiration_date  DateTime  @db.DateTime(0)
+  refresh_token_expiration_date DateTime  @db.DateTime(0)
+  created_at                    DateTime  @default(now())
+  updated_at                    DateTime  @default(now())
+  deleted_at                    DateTime?
+  user                          user      @relation(fields: [id_user], references: [id])
+}
+
+model category {
+  id              Int               @id @default(autoincrement())
+  name            String            @db.VarChar(45)
+  description     String?           @db.VarChar(255)
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @default(now())
+  deleted_at      DateTime?
+  recipe_category recipe_category[]
+}
+
+model utensil {
+  id             Int              @id @default(autoincrement())
+  name           String           @db.VarChar(45)
+  description    String?          @db.VarChar(255)
+  created_at     DateTime         @default(now())
+  updated_at     DateTime         @default(now())
+  deleted_at     DateTime?
+  recipe_utensil recipe_utensil[]
+}
+
+model ingredient {
+  id                Int                 @id @default(autoincrement())
+  name              String              @db.VarChar(45)
+  observation       String?             @db.VarChar(255)
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now())
+  deleted_at        DateTime?
+  recipe_ingredient recipe_ingredient[]
+}
+
+enum recipe_type {
+  sweet
+  salty
+  sour
+  bitter
+}
+
+enum recipe_complexity {
+  easy
+  normal
+  medium
+  difficult
+}
+
+model recipe {
+  id                Int                 @id @default(autoincrement())
+  name              String              @db.VarChar(100)
+  description       String?             @db.VarChar(255)
+  income            String              @db.VarChar(45)
+  type              recipe_type
+  time              String              @db.VarChar(45)
+  complexity        recipe_complexity
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now())
+  deleted_at        DateTime?
+  favourite         favourite[]
+  recipe_category   recipe_category[]
+  recipe_utensil    recipe_utensil[]
+  recipe_ingredient recipe_ingredient[]
+}
+
+model favourite {
+  id         Int       @id @default(autoincrement())
+  id_user    Int
+  id_recipe  Int
+  created_at DateTime  @default(now())
+  updated_at DateTime  @default(now())
+  deleted_at DateTime?
+  user       user      @relation(fields: [id_user], references: [id])
+  recipe     recipe    @relation(fields: [id_recipe], references: [id])
+}
+
+model role_permission {
+  id            Int        @id @default(autoincrement())
+  id_role       Int
+  id_permission Int
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @default(now())
+  deleted_at    DateTime?
+  role          role       @relation(fields: [id_role], references: [id])
+  permission    permission @relation(fields: [id_permission], references: [id])
+}
+
+model user_role {
+  id           Int         @id @default(autoincrement())
+  id_user      Int
+  id_role      Int
+  created_at   DateTime    @default(now())
+  updated_at   DateTime    @default(now())
+  deleted_at   DateTime?
+  role         role        @relation(fields: [id_role], references: [id])
+  user         user        @relation(fields: [id_user], references: [id])
+  permission   permission? @relation(fields: [permissionId], references: [id])
+  permissionId Int?
+}
+
+model recipe_category {
+  id          Int       @id @default(autoincrement())
+  id_recipe   Int
+  id_category Int
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @default(now())
+  deleted_at  DateTime?
+  recipe      recipe    @relation(fields: [id_recipe], references: [id])
+  category    category  @relation(fields: [id_category], references: [id])
+}
+
+model recipe_utensil {
+  id         Int       @id @default(autoincrement())
+  id_recipe  Int
+  id_utensil Int
+  created_at DateTime  @default(now())
+  updated_at DateTime  @default(now())
+  deleted_at DateTime?
+  recipe     recipe    @relation(fields: [id_recipe], references: [id])
+  utensil    utensil   @relation(fields: [id_utensil], references: [id])
+}
+
+model recipe_ingredient {
+  id            Int        @id @default(autoincrement())
+  id_recipe     Int
+  id_ingredient Int
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @default(now())
+  deleted_at    DateTime?
+  recipe        recipe     @relation(fields: [id_recipe], references: [id])
+  ingredient    ingredient @relation(fields: [id_ingredient], references: [id])
+}
