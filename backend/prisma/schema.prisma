@@ -62,6 +62,7 @@ model recover_password {
   id_user               Int
   token                 String    @db.Text
   token_expiration_date DateTime  @db.DateTime(0)
+  code                  String    @db.VarChar(6)
   is_used               Boolean   @default(false) @db.TinyInt
   created_at            DateTime  @default(now())
   updated_at            DateTime  @default(now())
